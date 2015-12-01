@@ -709,9 +709,11 @@ multimediaKeys = filter ((/= noSymbol) . snd) . map (id &&& stringToKeysym) $
 checkKeymap :: XConfig l -> [(String, a)] -> X ()
 checkKeymap conf km = warn (doKeymapCheck conf km)
   where warn ([],[])   = return ()
-        warn (bad,dup) = spawn $ "xmessage 'Warning:\n"
+        warn (bad,dup) = do
+                         mh <- asks (messageHook.config)
+                         mh $ "Warning:\n"
                             ++ msg "bad" bad ++ "\n"
-                            ++ msg "duplicate" dup ++ "'"
+                            ++ msg "duplicate" dup
         msg _ [] = ""
         msg m xs = m ++ " keybindings detected: " ++ showBindings xs
         showBindings = unwords . map (("\""++) . (++"\""))
