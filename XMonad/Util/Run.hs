@@ -26,6 +26,7 @@ module XMonad.Util.Run (
                           runInTerm,
                           safeRunInTerm,
                           seconds,
+                          spawnPipePid,
                           spawnPipe,
 
                           hPutStr, hPutStrLn  -- re-export for convenience
@@ -34,6 +35,7 @@ module XMonad.Util.Run (
 import Codec.Binary.UTF8.String
 import System.Posix.IO
 import System.Posix.Process (createSession, executeFile, forkProcess)
+import System.Posix.Types (ProcessID)
 import Control.Concurrent (threadDelay)
 import System.IO
 import System.Process (runInteractiveProcess)
@@ -144,15 +146,18 @@ runInTerm = unsafeRunInTerm
 safeRunInTerm :: String -> String -> X ()
 safeRunInTerm options command = asks (terminal . config) >>= \t -> safeSpawn t [options, " -e " ++ command]
 
--- | Launch an external application through the system shell and return a @Handle@ to its standard input.
-spawnPipe :: MonadIO m => String -> m Handle
-spawnPipe x = io $ do
+spawnPipePid :: MonadIO m => String -> m (Handle, ProcessID)
+spawnPipePid x = io $ do
     (rd, wr) <- createPipe
     setFdOption wr CloseOnExec True
     h <- fdToHandle wr
     hSetBuffering h LineBuffering
-    _ <- xfork $ do
-          _ <- dupTo rd stdInput
-          executeFile "/bin/sh" False ["-c", encodeString x] Nothing
+    pid <- xfork $ do
+        dupTo rd stdInput
+        executeFile "/bin/sh" False ["-c", x] Nothing
     closeFd rd
-    return h
+    return (h, pid)
+
+-- | Launch an external application through the system shell and return a @Handle@ to its standard input.
+spawnPipe :: MonadIO m => String -> m Handle
+spawnPipe = liftM fst . spawnPipePid
