@@ -69,6 +69,7 @@ module XMonad.Hooks.UrgencyHook (
                                  SpawnUrgencyHook(..),
                                  UrgencyHook(urgencyHook),
                                  Interval,
+                                 adjustUrgents,
                                  borderUrgencyHook, focusHook, spawnUrgencyHook, stdoutUrgencyHook
                                  ) where
 
