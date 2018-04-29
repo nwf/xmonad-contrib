@@ -75,6 +75,7 @@ module XMonad.Actions.CycleWS (
                               , skipTags
 
                               , screenBy
+                              , lastViewedHiddenExcept
 
                              ) where
 
